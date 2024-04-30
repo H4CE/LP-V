@@ -1,0 +1,141 @@
+#include <bits/stdc++.h>
+using namespace std;
+using namespace std::chrono;
+using intl = long long int;
+
+void bubbleSort(vector<int> &arr)
+{
+    for (int i = 0; i < arr.size() - 1; i++)
+    {
+        for (int j = 0; j < arr.size() - i - 1; j++)
+        {
+            if (arr[j] > arr[j + 1])
+            {
+                swap(arr[j], arr[j + 1]);
+            }
+        }
+    }
+}
+void bubbleSortParallel(vector<int> &arr)
+{
+    for (int i = 0; i < arr.size() - 1; i++)
+    {
+#pragma omp parallel for
+        for (int j = 0; j < arr.size() - i - 1; j++)
+        {
+            if (arr[j] > arr[j + 1])
+            {
+                swap(arr[j], arr[j + 1]);
+            }
+        }
+    }
+}
+void merge(int lo, int hi, int mid, vector<int> &arr)
+{
+    vector<int> temp;
+    int left = lo, right = mid + 1;
+
+    while (left <= mid && right <= hi)
+    {
+        if (arr[left] <= arr[right])
+        {
+            temp.push_back(arr[left]);
+            left++;
+        }
+        else
+        {
+            temp.push_back(arr[right]);
+            right++;
+        }
+    }
+    while (left <= mid)
+    {
+        temp.push_back(arr[left]);
+        left++;
+    }
+    while (right <= hi)
+    {
+        temp.push_back(arr[right]);
+        right++;
+    }
+    int ind = 0;
+    for (int i = lo; i <= hi; i++)
+    {
+        arr[i] = temp[ind];
+        ind++;
+    }
+}
+void mergeSort(int lo, int hi, vector<int> &arr)
+{
+    if (lo < hi)
+    {
+        int mid = (hi + lo) / 2;
+        mergeSort(lo, mid, arr);
+        mergeSort(mid + 1, hi, arr);
+        merge(lo, hi, mid, arr);
+    }
+}
+void mergeSortParallel(int lo, int hi, vector<int> &arr)
+{
+    if (lo < hi)
+    {
+        int mid = (hi + lo) / 2;
+
+#pragma omp parallel sections
+        {
+#pragma omp section
+            {
+                mergeSortParallel(lo, mid, arr);
+            }
+
+#pragma omp section
+            {
+                mergeSortParallel(mid + 1, hi, arr);
+            }
+        }
+        merge(lo, hi, mid, arr);
+    }
+}
+
+int main()
+{
+    int n = 10000;
+    vector<int> arr;
+
+    srand(time(0));
+
+    for (int i = 0; i < n; i++)
+    {
+        arr.push_back(rand() % 100);
+    }
+
+    vector<int> arrcpy = arr;
+
+    auto start = high_resolution_clock::now();
+    bubbleSort(arr);
+    arr = arrcpy;
+    auto end = high_resolution_clock::now();
+    auto seqBubbleSortDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    bubbleSortParallel(arr);
+    end = high_resolution_clock::now();
+    auto parrBubbleSortDuration = duration_cast<milliseconds>(end - start);
+    arr = arrcpy;
+
+    start = high_resolution_clock::now();
+    mergeSort(0, arr.size() - 1, arr);
+    arr = arrcpy;
+    end = high_resolution_clock::now();
+    auto seqMergeSortDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    mergeSortParallel(0, arr.size() - 1, arr);
+    end = high_resolution_clock::now();
+    auto parrMergeSortDuration = duration_cast<milliseconds>(end - start);
+
+    cout << seqBubbleSortDuration.count() << " " << parrBubbleSortDuration.count() << endl;
+    cout << seqMergeSortDuration.count() << " " << parrMergeSortDuration.count() << endl;
+
+    return 0;
+}

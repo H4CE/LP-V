@@ -1,0 +1,63 @@
+
+import pandas as pd
+import numpy as np
+
+
+df=pd.read_csv("letter_recognition.data", sep=",")
+
+
+df.head()
+
+
+df.info()
+
+
+df.isna().sum()
+
+
+x=df.drop(columns={"T"})
+y=df["T"]
+
+
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test=train_test_split(x,y,train_size=0.7,random_state=12)
+
+
+from sklearn.preprocessing import StandardScaler
+ss=StandardScaler()
+ss.fit(x_train)
+ss.fit(x_test)
+
+
+from sklearn.neural_network import MLPClassifier
+mlp=MLPClassifier(hidden_layer_sizes=(250,300),activation="relu",max_iter=100)
+
+
+mlp.fit(x_train,y_train)
+
+
+y_pred=mlp.predict(x_test)
+
+
+from sklearn.metrics import accuracy_score,confusion_matrix
+accuracy_score(y_test,y_pred)
+
+
+cm=confusion_matrix(y_test,y_pred)
+cm
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+plt.figure(figsize=(10,10))
+sns.heatmap(cm,fmt="g",annot=True,xticklabels="ABCDEFGHIJKLMNOPQRSTUVWXYZ", yticklabels="ABCDEFGHIJKKLMNOPQRSTUVWXYZ",cmap="Blues")
+plt.xlabel("predicted")
+plt.ylabel("True")
+plt.show()
+
+
+
+
+

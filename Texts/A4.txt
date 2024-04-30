@@ -1,0 +1,166 @@
+%%cu
+
+#include <bits/stdc++.h>
+using namespace std;
+
+__global__ void add(int *a, int *b, int *c, int n)
+{
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if (tid < n)
+    {
+        c[tid] = a[tid] + b[tid];
+    }
+}
+void initialize(int *arr, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        arr[i] = (rand() % 20);
+    }
+}
+
+void print(int *arr, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+}
+
+int main()
+{   
+    int n = 4;
+    int arrSize = n * sizeof(int);
+    srand(time(0));
+
+    int *a = new int[n];
+    int *b = new int[n];
+    int *c = new int[n];
+
+    initialize(a, n);
+    initialize(b, n);
+
+    print(a, n);
+    print(b, n);
+
+    int *x, *y, *z;
+    cudaMalloc(&x, arrSize);
+    cudaMalloc(&y, arrSize);
+    cudaMalloc(&z, arrSize);
+
+    cudaMemcpy(x, a, arrSize, cudaMemcpyHostToDevice);
+    cudaMemcpy(y, b, arrSize, cudaMemcpyHostToDevice);
+
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (n - 1 + threadsPerBlock) / threadsPerBlock;
+
+    add<<<blocksPerGrid, threadsPerBlock>>>(x, y, z, n);
+
+    cudaMemcpy(c, z, arrSize, cudaMemcpyDeviceToHost);
+    print(c, n);
+
+    delete[] a;
+    delete[] b;
+    delete[] c;
+
+    cudaFree(x);
+    cudaFree(y);
+    cudaFree(z);
+
+    return 0;
+}
+// nvcc cuda1.cu 
+// ./a.out 
+
+or
+// nvcc cuda1.cu -o b
+// ./b.out 
+
+
+
+%%cu
+#include <bits/stdc++.h>
+using namespace std;
+
+__global__ void multiply(int *a, int *b, int *c, int n)
+{
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (row < n && col < n)
+    {
+        int sum = 0;
+        for (int i = 0; i < n; i++)
+        {
+            sum += a[row * n + i] * b[i * n + col];
+        }
+        c[row * n + col] = sum;
+    }
+}
+void initialize(int* matrix, int size) {
+    for (int i = 0; i < size * size; i++) {
+        matrix[i] = (rand() % 5+1);
+    }
+}
+void print(int *arr, int n)
+{
+
+    for (int row = 0; row < n; row++)
+    {
+        for (int col = 0; col < n; col++)
+        {
+            cout << arr[row * n + col] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+int main()
+{
+    //srand(time(0));
+
+    int n = 2;
+    int numOfElems = n * n;
+    int sizeofMatx = numOfElems * sizeof(int);
+
+    int *a, *b, *c;
+    a = new int[numOfElems];
+    b = new int[numOfElems];
+    c = new int[numOfElems];
+
+    initialize(a,n);
+    initialize(b,n);
+
+    print(a,n);
+    print(b,n);
+
+    int *x, *y, *z;
+    cudaMalloc(&x, sizeofMatx);
+    cudaMalloc(&y, sizeofMatx);
+    cudaMalloc(&z, sizeofMatx);
+
+    cudaMemcpy(x, a, sizeofMatx, cudaMemcpyHostToDevice);
+    cudaMemcpy(y, b, sizeofMatx, cudaMemcpyHostToDevice);
+
+    int threads = 2; // Or any value that suits your GPU
+    int blocks = (n + threads - 1) / threads;
+
+    dim3 threadsPB(threads, threads);
+    dim3 blocksPG(blocks, blocks);
+    
+
+    multiply<<<blocksPG, threadsPB>>>(x, y, z, n);
+
+    cudaMemcpy(c, z, sizeofMatx, cudaMemcpyDeviceToHost);
+    print(c, n);
+
+    delete[] a;
+    delete[] b;
+    delete[] c;
+
+    cudaFree(x);
+    cudaFree(y);
+    cudaFree(z);
+    return 0;
+}

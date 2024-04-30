@@ -1,0 +1,149 @@
+#include <bits/stdc++.h>
+using namespace std;
+using namespace std::chrono;
+
+int seqFindMin(vector<int> &arr)
+{
+    int mini = arr[0];
+    for (int i = 1; i < arr.size(); i++)
+    {
+        if (arr[i] < mini)
+        {
+            mini = arr[i];
+        }
+    }
+    return mini;
+}
+int parrFindMin(vector<int> &arr)
+{
+    int mini = arr[0];
+#pragma omp parallel for reduction(min : mini)
+    for (int i = 1; i < arr.size(); i++)
+    {
+        if (arr[i] < mini)
+        {
+            mini = arr[i];
+        }
+    }
+    return mini;
+}
+int seqFindMax(vector<int> &arr)
+{
+    int maxi = arr[0];
+    for (int i = 1; i < arr.size(); i++)
+    {
+        if (arr[i] > maxi)
+        {
+            maxi = arr[i];
+        }
+    }
+    return maxi;
+}
+int parrFindMax(vector<int> &arr)
+{
+    int maxi = arr[0];
+#pragma omp parallel for reduction(max : maxi)
+    for (int i = 1; i < arr.size(); i++)
+    {
+        if (arr[i] > maxi)
+        {
+            maxi = arr[i];
+        }
+    }
+    return maxi;
+}
+int seqFindSum(vector<int> &arr)
+{
+    int sum = 0;
+
+    for (int i = 0; i < arr.size(); i++)
+    {
+        sum += arr[i];
+    }
+    return sum;
+}
+int parrFindSum(vector<int> &arr)
+{
+    int sum = 0;
+#pragma omp parallel for reduction(+ : sum)
+    for (int i = 0; i < arr.size(); i++)
+    {
+        sum += arr[i];
+    }
+    return sum;
+}
+double seqFindAvg(vector<int> &arr)
+{
+    int sum = seqFindSum(arr);
+    double avg = sum / (double(1.0));
+    return avg;
+}
+double parrFindAvg(vector<int> &arr)
+{
+    int sum = parrFindSum(arr);
+    double avg = sum / (double(1.0));
+    return avg;
+}
+int main()
+{
+    const int size = 10000;
+    vector<int> arr(size);
+
+    // Seed the random number generator
+    srand(time(0));
+
+    // Initialize the array with random values
+    for (int i = 0; i < size; ++i)
+    {
+        arr[i] = rand() % 1000;
+    }
+    cout << endl;
+    
+    auto start = high_resolution_clock::now();
+    seqFindMin(arr);
+    auto end = high_resolution_clock::now();
+    auto seqFindMinDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    parrFindMin(arr);
+    end = high_resolution_clock::now();
+    auto parrFindMinDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    seqFindMax(arr);
+    end = high_resolution_clock::now();
+    auto seqFindMaxDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    parrFindMax(arr);
+    end = high_resolution_clock::now();
+    auto parrFindMaxDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    seqFindSum(arr);
+    end = high_resolution_clock::now();
+    auto seqFindSumDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    parrFindSum(arr);
+
+    end = high_resolution_clock::now();
+    auto parrFindSumDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    seqFindAvg(arr);
+    end = high_resolution_clock::now();
+    auto seqFindAvgDuration = duration_cast<milliseconds>(end - start);
+
+    start = high_resolution_clock::now();
+    parrFindAvg(arr);
+    end = high_resolution_clock::now();
+    auto parrFindAvgDuration = duration_cast<milliseconds>(end - start);
+
+    cout << seqFindMinDuration.count() << " " << parrFindMinDuration.count() << endl;
+    cout << seqFindMaxDuration.count() << " " << parrFindMaxDuration.count() << endl;
+    cout << seqFindSumDuration.count() << " " << parrFindSumDuration.count() << endl;
+    cout << seqFindAvgDuration.count() << " " << parrFindAvgDuration.count() << endl;
+
+    return 0;
+}

@@ -1,0 +1,99 @@
+
+import pandas as pd
+import numpy as np
+
+
+train_data=pd.read_csv("fashion-mnist_train.csv")
+test_data=pd.read_csv("fashion-mnist_test.csv")
+
+
+x_train=train_data.drop(columns={"label"})
+x_test=test_data.drop(columns={"label"})
+y_train=train_data["label"]
+y_test=test_data["label"]
+
+
+x_train_values = x_train.values
+x_test_values = x_test.values
+
+y_train_values=y_train.values
+y_test_values=y_test.values
+
+
+
+x_train_values[10]
+
+
+x_train_values = x_train_values.astype("float32")/255.0
+x_test_values = x_test_values.astype("float32")/255.0
+
+
+
+x_train_values[10]
+
+
+import matplotlib.pyplot as plt
+
+
+
+for i in range(20):
+    print((y_train_values[i]))
+    plt.matshow(x_train_values[i].reshape((28,28)))
+    plt.show()
+
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+
+model=Sequential([
+    Dense(100,input_shape=(784,),activation="relu"),
+    Dense(10,activation="sigmoid")
+])
+
+model.compile(
+    optimizer="adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+model.fit(x_train_values,y_train_values,epochs=5)
+
+
+y_pred=model.predict(x_test_values)
+
+
+y_test_values
+
+
+y_pred_values=[]
+for i in y_pred:
+    y_pred_values.append(np.argmax(i))
+y_pred_values
+
+
+from sklearn.metrics import confusion_matrix,accuracy_score
+acc=accuracy_score(y_test_values,y_pred_values)
+acc
+
+
+cm=confusion_matrix(y_test_values,y_pred_values)
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+labels = ['t-shirt','trouser','pullover','dress','coat','sandal','sneakers','shirt','bag','ankle boots']
+
+
+
+plt.figure(figsize=(12,10))
+sns.heatmap(cm,annot=True,fmt="g",cmap="Blues",xticklabels=labels,yticklabels=labels)
+plt.xlabel("predicted")
+plt.ylabel("actual")
+
+
+
+
+
